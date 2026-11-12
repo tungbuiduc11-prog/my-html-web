@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mô Phỏng Tổng Hợp Hai Lực Đồng Quy - Vật Lý 10</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg-main: #090d16;
+      --bg-card: #111827;
+      --bg-card-sub: #1f2937;
+      --border: #374151;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --cyan: #06b6d4;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --amber: #f59e0b;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      padding: 12px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    header {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+      border: 1px solid #4338ca;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    h1 { font-size: 1.35rem; color: #38bdf8; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .sec-1 { color: #38bdf8; }
+    .sec-2 { color: #f59e0b; }
+    .sec-3 { color: #10b981; }
+    .sec-4 { color: #ec4899; }
+    
+    /* Simulation canvas box */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #060911;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+      touch-action: none;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    .canvas-overlay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(17, 24, 39, 0.9);
+      backdrop-filter: blur(4px);
+      border: 1px solid #374151;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      max-width: 280px;
+      pointer-events: none;
+    }
+    .dock-alert {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(245, 158, 11, 0.9);
+      color: #000;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .dock-success {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(16, 185, 129, 0.95);
+      color: #fff;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* Controls grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .control-item {
+      background: var(--bg-card-sub);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .val-tag {
+      color: var(--cyan);
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+    input[type=range] {
+      width: 100%;
+      height: 8px;
+      accent-color: var(--cyan);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #1f2937;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn:hover { background: #374151; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: #2563eb; border-color: #3b82f6; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-amber { background: #d97706; border-color: #f59e0b; color: #fff; }
+    .btn-amber:hover { background: #b45309; }
+    .btn-emerald { background: #059669; border-color: #10b981; color: #fff; }
+    .btn-emerald:hover { background: #047857; }
+    
+    /* Summary Knowledge Box */
+    .summary-box {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 10px;
+    }
+    .summary-col {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .summary-col h4 {
+      color: #34d399;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .summary-col ul {
+      list-style-type: disc;
+      padding-left: 20px;
+      font-size: 0.88rem;
+      color: #d1d5db;
+    }
+    .summary-col li { margin-bottom: 8px; }
+
+    /* Quiz Assessment (Instant feedback) */
+    .quiz-card {
+      background: var(--bg-card-sub);
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .quiz-question {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #f3f4f6;
+    }
+    .quiz-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 8px;
+    }
+    .quiz-option {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.88rem;
+      transition: all 0.15s;
+    }
+    .quiz-option:hover { background: #1e293b; border-color: #4b5563; }
+    .quiz-option.correct {
+      background: rgba(16, 185, 129, 0.25) !important;
+      border-color: #10b981 !important;
+      color: #34d399 !important;
+      font-weight: 600;
+    }
+    .quiz-option.wrong {
+      background: rgba(244, 63, 94, 0.25) !important;
+      border-color: #f43f5e !important;
+      color: #fda4af !important;
+    }
+    .quiz-explanation {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: #0f172a;
+      border-left: 4px solid #10b981;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 640px) {
+      .canvas-container { height: 380px; }
+      body { padding: 8px; }
+      h1 { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>⚖️ Tổng Hợp Hai Lực Đồng Quy - Quy Tắc Hình Bình Hành</h1>
+        <p style="font-size:0.85rem; color:#9ca3af; margin-top:2px;">
+          Vật Lí 10 • Chương Lực & Chuyển Động • Chuẩn LaTeX & Xuất SCORM LMS vnEdu
+        </p>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="window.print()">🖨️ In / Lưu PDF</button>
+      </div>
+    </header>
+
+    <!-- SECTION 1: MÔ PHỎNG -->
+    <div class="section-card">
+      <div class="section-title sec-1">
+        <span>🔬 PHẦN 1: MÔ PHỎNG TRỰC QUAN (VISUAL SIMULATION)</span>
+      </div>
+
+      <div class="canvas-container" id="canvas-wrap">
+        <canvas id="canvas"></canvas>
+        <div id="dock-status" class="dock-alert">
+          <span>⚠️ Kéo 2 gốc vector về điểm O hoặc bấm "Tịnh tiến về O" để đồng quy</span>
+        </div>
+        <div class="canvas-overlay" id="calc-overlay">
+          <div style="font-weight:700; color:#38bdf8; margin-bottom:4px;">KẾT QUẢ ĐO TỨC THỜI</div>
+          <div>Lực <span id="tex-f1"></span>: <span style="color:#60a5fa; font-weight:600;" id="txt-f1">20.0 N</span></div>
+          <div>Lực <span id="tex-f2"></span>: <span style="color:#34d399; font-weight:600;" id="txt-f2">25.0 N</span></div>
+          <div>Góc kẹp <span id="tex-alpha"></span>: <span style="color:#f59e0b; font-weight:600;" id="txt-alpha">60.0°</span></div>
+          <hr style="border-color:#374151; margin:6px 0;">
+          <div style="color:#ec4899; font-weight:700; font-size:0.95rem;">
+            Hợp lực <span id="tex-f-res-label"></span>: <span id="txt-f-res">39.1 N</span>
+          </div>
+          <div style="font-size:0.75rem; color:#9ca3af; margin-top:4px;" id="tex-formula-res"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: THÔNG SỐ VÀ ĐIỀU KHIỂN -->
+    <div class="section-card">
+      <div class="section-title sec-2">
+        <span>⚙️ PHẦN 2: THÔNG SỐ VÀ ĐIỀU KHIỂN (CONTROL PANEL)</span>
+      </div>
+
+      <div class="controls-grid">
+        <div class="control-item">
+          <div class="control-header">
+            <span>Độ lớn lực <span id="ctrl-lbl-f1"></span>:</span>
+            <span class="val-tag" id="val-f1">20 N</span>
+          </div>
+          <input type="range" id="slider-f1" min="5" max="50" step="1" value="20" oninput="updateF1(this.value)">
+        </div>
+
+        <div class="control-item">
+          <div class="control-header">
+            <span>Độ lớn lực <span id="ctrl-lbl-f2"></span>:</span>
+            <span class="val-tag" id="val-f2">25 N</span>
+          </div>
+          <input type="range" id="slider-f2" min="5" max="50" step="1" value="25" oninput="updateF2(this.value)">
+        </div>
+
+        <div class="control-item">
+          <div class="control-header">
+            <span>Góc hợp bởi 2 lực (<span id="ctrl-lbl-alpha"></span>):</span>
+            <span class="val-tag" id="val-alpha">60°</span>
+          </div>
+          <input type="range" id="slider-alpha" min="0" max="180" step="1" value="60" oninput="updateAlpha(this.value)">
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
+        <div class="btn-row">
+          <button class="btn btn-emerald" id="btn-play" onclick="togglePlay()">▶️ Quét góc tự động (Play)</button>
+          <button class="btn" id="btn-slow" onclick="toggleSlow()">🐢 Tua chậm (0.5x)</button>
+          <button class="btn" onclick="resetSim()">🔄 Đặt lại</button>
+          <button class="btn btn-primary" onclick="autoDock()">🧲 Tịnh tiến về O</button>
+          <button class="btn" onclick="separate()">↩️ Tách rời 2 vector</button>
+        </div>
+        <div class="btn-row">
+          <span style="font-size:0.85rem; color:#9ca3af; align-self:center;">Góc mẫu:</span>
+          <button class="btn" onclick="setAngle(0)">0°</button>
+          <button class="btn" onclick="setAngle(60)">60°</button>
+          <button class="btn" onclick="setAngle(90)">90°</button>
+          <button class="btn" onclick="setAngle(120)">120°</button>
+          <button class="btn" onclick="setAngle(180)">180°</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: TÓM TẮT KIẾN THỨC -->
+    <div class="section-card">
+      <div class="section-title sec-3">
+        <span>📖 PHẦN 3: TÓM TẮT KIẾN THỨC SƯ PHẠM (KNOWLEDGE SUMMARY)</span>
+      </div>
+      <div class="summary-box">
+        <div class="summary-grid">
+          <div class="summary-col">
+            <h4>📐 1. Khái Niệm & Quy Tắc Hình Bình Hành</h4>
+            <ul>
+              <li><strong>Tổng hợp lực:</strong> Là phép thay thế nhiều lực tác dụng đồng thời vào một vật bằng một lực duy nhất (gọi là <em>hợp lực</em>) có tác dụng cơ học tương đương.</li>
+              <li><strong>Quy tắc hình bình hành:</strong> Nếu hai lực đồng quy <span id="k-f1"></span> và <span id="k-f2"></span> được biểu diễn bằng hai cạnh kề của hình bình hành, thì hợp lực <span id="k-f"></span> được biểu diễn bằng đường chéo xuất phát từ điểm gốc chung O:
+                <div style="text-align:center; margin:8px 0; padding:6px; background:#0f172a; border-radius:6px;" id="k-vec-eq"></div>
+              </li>
+              <li><strong>Tịnh tiến lực:</strong> Ta có thể tịnh tiến song song một vectơ lực về cùng điểm đặt chung O mà không làm thay đổi phương, chiều và độ lớn của lực đó.</li>
+            </ul>
+          </div>
+
+          <div class="summary-col">
+            <h4>🔢 2. Công Thức Độ Lớn Hợp Lực</h4>
+            <ul>
+              <li><strong>Công thức tổng quát:</strong>
+                <div style="text-align:center; margin:8px 0; padding:6px; background:#0f172a; border-radius:6px; color:#f59e0b;" id="k-mag-formula"></div>
+              </li>
+              <li><strong>Bất đẳng thức giới hạn:</strong>
+                <div style="text-align:center; margin:6px 0; padding:4px; background:#0f172a; border-radius:6px; color:#fb7185;" id="k-bound-formula"></div>
+              </li>
+              <li><strong>Ý nghĩa:</strong> Độ lớn hợp lực luôn nằm trong đoạn từ hiệu đến tổng độ lớn hai lực thành phần.</li>
+            </ul>
+          </div>
+
+          <div class="summary-col">
+            <h4>⚡ 3. Các Trường Hợp Góc Đặc Biệt</h4>
+            <ul>
+              <li><strong>Cùng chiều (<span id="k-c1-ang"></span>):</strong> <span id="k-c1-res"></span> (Hợp lực lớn nhất)</li>
+              <li><strong>Ngược chiều (<span id="k-c2-ang"></span>):</strong> <span id="k-c2-res"></span> (Hợp lực nhỏ nhất)</li>
+              <li><strong>Vuông góc (<span id="k-c3-ang"></span>):</strong> <span id="k-c3-res"></span> (Định lý Pythagore)</li>
+              <li><strong>Cùng độ lớn, <span id="k-c4-ang"></span>:</strong> <span id="k-c4-res"></span> (Hình thoi góc 120°)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: VẬN DỤNG -->
+    <div class="section-card">
+      <div class="section-title sec-4">
+        <span>✍️ PHẦN 4: VẬN DỤNG - TRẮC NGHIỆM ĐÁNH GIÁ (10 CÂU PHẢN HỒI TỨC THÌ)</span>
+      </div>
+
+      <div style="background:#1f2937; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="font-size:0.9rem; color:#cbd5e1;">
+          📌 Tiến độ & Điểm số: <span id="quiz-status" style="font-weight:700; color:#38bdf8;">Đúng 0 / 0 câu (Tổng 10 câu)</span>
+          <span style="font-size:0.8rem; color:#9ca3af; margin-left:8px;">(Chọn đáp án để nhận phản hồi xanh/đỏ và lời giải ngay tức thì)</span>
+        </div>
+        <button class="btn" onclick="resetQuiz()">🔄 Làm Lại Từ Đầu</button>
+      </div>
+
+      <div id="quiz-list" style="margin-top:14px;"></div>
+    </div>
+
+    <footer style="text-align:center; padding:16px; color:#6b7280; font-size:0.82rem; border-top:1px solid #1f2937;">
+      Mô Phỏng Tổng Hợp Lực Đồng Quy • Vật Lý 10 • Hỗ trợ học tập trực quan và xuất chuẩn SCORM cho vnEdu LMS.
+    </footer>
+  </div>
+
+  <script>
+    const QUIZ_DATA = [{"id":1,"question":"Hai lực đồng quy $\\vec{F}_1$ và $\\vec{F}_2$ cùng phương, cùng chiều (góc hợp bởi hai lực $\\alpha = 0^\\circ$). Độ lớn của hợp lực $F$ được tính bằng công thức nào sau đây?","options":["A. $F = F_1 + F_2$","B. $F = |F_1 - F_2|$","C. $F = \\sqrt{F_1^2 + F_2^2}$","D. $F = 2F_1 + F_2$"],"correctAnswer":0,"explanation":"Khi hai lực thành phần cùng phương, cùng chiều ($\\alpha = 0^\\circ, \\cos 0^\\circ = 1$), hợp lực có cùng hướng với hai lực và đạt độ lớn cực đại: $F_{\\max} = F_1 + F_2$."},{"id":2,"question":"Hai lực đồng quy $F_1 = 30\\text{ N}$ và $F_2 = 40\\text{ N}$ tác dụng vào một chất điểm và vuông góc với nhau ($\\alpha = 90^\\circ$). Độ lớn của hợp lực $F$ là:","options":["A. $70\\text{ N}$","B. $10\\text{ N}$","C. $50\\text{ N}$","D. $1200\\text{ N}$"],"correctAnswer":2,"explanation":"Khi hai lực vuông góc nhau ($\\alpha = 90^\\circ, \\cos 90^\\circ = 0$), hình bình hành lực trở thành hình chữ nhật. Theo định lý Pythagore: $F = \\sqrt{F_1^2 + F_2^2} = \\sqrt{30^2 + 40^2} = \\sqrt{900 + 1600} = \\sqrt{2500} = 50\\text{ N}$."},{"id":3,"question":"Hai lực đồng quy có độ lớn lần lượt là $F_1 = 8\\text{ N}$ và $F_2 = 6\\text{ N}$. Độ lớn của hợp lực $F$ KHÔNG THỂ nhận giá trị nào sau đây?","options":["A. $2\\text{ N}$","B. $10\\text{ N}$","C. $14\\text{ N}$","D. $16\\text{ N}$"],"correctAnswer":3,"explanation":"Độ lớn của hợp lực luôn thỏa mãn bất đẳng thức: $|F_1 - F_2| \\le F \\le F_1 + F_2$. Thay số: $|8 - 6| \\le F \\le 8 + 6 \\iff 2\\text{ N} \\le F \\le 14\\text{ N}$. Do đó, $F$ không thể nhận giá trị bằng $16\\text{ N}$."},{"id":4,"question":"Tổng hợp hai lực đồng quy có cùng độ lớn $F_1 = F_2 = 20\\text{ N}$ hợp với nhau một góc $\\alpha = 120^\\circ$. Độ lớn của hợp lực $F$ là:","options":["A. $20\\text{ N}$","B. $40\\text{ N}$","C. $20\\sqrt{3}\\text{ N}$","D. $0\\text{ N}$"],"correctAnswer":0,"explanation":"Khi $F_1 = F_2$ và $\\alpha = 120^\\circ$, hình bình hành lực trở thành hình thoi có góc $120^\\circ$, gồm hai tam giác đều ghép lại. Ta có: $F = 2F_1\\cos(\\alpha/2) = 2 \\cdot 20 \\cdot \\cos(60^\\circ) = 2 \\cdot 20 \\cdot 0{,}5 = 20\\text{ N}$."},{"id":5,"question":"Thao tác 'tịnh tiến một vectơ lực song song với chính nó' trong bài toán tổng hợp lực nhằm mục đích gì?","options":["A. Làm tăng độ lớn của lực lên gấp hai lần","B. Đổi chiều tác dụng của lực","C. Đưa các lực chưa đồng quy về cùng một điểm đặt chung O để áp dụng quy tắc hình bình hành","D. Triệt tiêu hoàn toàn tác dụng của vectơ lực đó"],"correctAnswer":2,"explanation":"Vectơ lực là một vectơ trượt trong bài toán tổng hợp lực vật rắn hoặc chất điểm. Thao tác tịnh tiến song song cho phép đưa hai lực chưa đồng quy về cùng điểm đặt chung $O$ mà không làm thay đổi phương, chiều và độ lớn, từ đó áp dụng được quy tắc hình bình hành $\\vec{F} = \\vec{F}_1 + \\vec{F}_2$."},{"id":6,"question":"Khi góc kẹp $\\alpha$ giữa hai lực đồng quy $\\vec{F}_1$ và $\\vec{F}_2$ tăng dần từ $0^\\circ$ đến $180^\\circ$, độ lớn của hợp lực $F$ thay đổi như thế nào?","options":["A. Luôn tăng liên tục","B. Giảm liên tục từ $(F_1 + F_2)$ xuống $|F_1 - F_2|$","C. Không đổi vì độ lớn $F_1$ và $F_2$ không đổi","D. Tăng đến $90^\\circ$ rồi giảm"],"correctAnswer":1,"explanation":"Hàm số $\\cos\\alpha$ là hàm nghịch biến trên đoạn $[0^\\circ, 180^\\circ]$ (giảm từ $+1$ xuống $-1$). Vì $F = \\sqrt{F_1^2 + F_2^2 + 2F_1F_2\\cos\\alpha}$, nên khi góc $\\alpha$ tăng từ $0^\\circ$ đến $180^\\circ$, hợp lực $F$ sẽ giảm liên tục từ giá trị cực đại $F_{\\max} = F_1 + F_2$ xuống giá trị cực tiểu $F_{\\min} = |F_1 - F_2|$."},{"id":7,"question":"Theo quy tắc hình bình hành, vectơ hợp lực $\\vec{F}$ của hai lực đồng quy $\\vec{F}_1$ và $\\vec{F}_2$ được biểu diễn bằng yếu tố hình học nào?","options":["A. Cạnh đáy của hình bình hành","B. Đường cao của hình bình hành","C. Đường chéo của hình bình hành xuất phát từ điểm gốc đồng quy chung O","D. Chu vi của hình bình hành"],"correctAnswer":2,"explanation":"Theo định nghĩa chuẩn SGK Vật lí 10: Nếu hai lực đồng quy được biểu diễn bằng hai cạnh kề của một hình bình hành thì vectơ hợp lực $\\vec{F} = \\vec{F}_1 + \\vec{F}_2$ được biểu diễn bằng đường chéo xuất phát từ điểm gốc chung (điểm đồng quy $O$) của hình bình hành đó."},{"id":8,"question":"Một chất điểm chịu tác dụng của hai lực đồng quy $F_1 = 12\\text{ N}$ và $F_2 = 5\\text{ N}$. Nếu hợp lực đo được có độ lớn $F = 13\\text{ N}$ thì góc hợp bởi hai lực là:","options":["A. $\\alpha = 0^\\circ$","B. $\\alpha = 45^\\circ$","C. $\\alpha = 90^\\circ$","D. $\\alpha = 180^\\circ$"],"correctAnswer":2,"explanation":"Ta nhận thấy $12^2 + 5^2 = 144 + 25 = 169 = 13^2$, tức $F_1^2 + F_2^2 = F^2$. Theo định lý Pythagore đảo, hai lực $\\vec{F}_1$ và $\\vec{F}_2$ vuông góc với nhau, suy ra góc kẹp $\\alpha = 90^\\circ$."},{"id":9,"question":"Cho hai lực đồng quy có cùng độ lớn $F_1 = F_2 = 10\\text{ N}$ hợp với nhau một góc $\\alpha = 60^\\circ$. Độ lớn của hợp lực $F$ bằng:","options":["A. $10\\text{ N}$","B. $10\\sqrt{3}\\text{ N} \\approx 17{,}3\\text{ N}$","C. $20\\text{ N}$","D. $10\\sqrt{2}\\text{ N}$"],"correctAnswer":1,"explanation":"Khi $F_1 = F_2$ và góc kẹp $\\alpha = 60^\\circ$, ta có công thức: $F = 2F_1\\cos(\\alpha/2) = 2 \\cdot 10 \\cdot \\cos(30^\\circ) = 2 \\cdot 10 \\cdot \\frac{\\sqrt{3}}{2} = 10\\sqrt{3}\\text{ N} \\approx 17{,}32\\text{ N}$."},{"id":10,"question":"Một chất điểm chịu tác dụng đồng thời của hai lực $F_1 = 15\\text{ N}$ và $F_2 = 20\\text{ N}$. Để hợp lực $F$ có độ lớn cực tiểu $F_{\\min} = 5\\text{ N}$, góc $\\alpha$ giữa hai lực phải bằng:","options":["A. $\\alpha = 0^\\circ$","B. $\\alpha = 90^\\circ$","C. $\\alpha = 180^\\circ$","D. $\\alpha = 60^\\circ$"],"correctAnswer":2,"explanation":"Độ lớn hợp lực đạt giá trị cực tiểu khi hai lực thành phần cùng phương nhưng ngược chiều nhau, tức góc hợp bởi hai lực là $\\alpha = 180^\\circ$. Khi đó $F_{\\min} = |F_1 - F_2| = |15 - 20| = 5\\text{ N}$."}];
+    let userAnswers = {};
+    let isPlaying = false;
+    let isSlow = false;
+    let sweepDir = 1;
+    let lastTime = performance.now();
+
+    // Helper: Render LaTeX via KaTeX
+    function renderTex(tex, display = false) {
+      if (window.katex) {
+        try {
+          return katex.renderToString(tex, { displayMode: display, throwOnError: false });
+        } catch(e) {
+          return tex;
+        }
+      }
+      return tex;
+    }
+
+    function renderMathText(text) {
+      if (!text) return '';
+      return text.replace(/\$([^\$]+?)\$/g, (m, p1) => {
+        return renderTex(p1, false);
+      });
+    }
+
+    // SCORM API
+    let scormApi = null;
+    try {
+      let win = window;
+      let attempts = 0;
+      while (win.API == null && win.parent != null && win.parent != win && attempts < 7) {
+        attempts++;
+        win = win.parent;
+      }
+      scormApi = win.API || (win.opener ? win.opener.API : null);
+      if (scormApi) {
+        scormApi.LMSInitialize("");
+        scormApi.LMSSetValue("cmi.core.lesson_status", "incomplete");
+        scormApi.LMSCommit("");
+      }
+    } catch(e) {}
+
+    // Simulation State
+    let f1 = 20;
+    let f2 = 25;
+    let alpha = 60;
+    let isDocked = false;
+    let oPos = { x: 300, y: 280 };
+    let f1Pos = { x: 180, y: 160 };
+    let f2Pos = { x: 420, y: 380 };
+    let draggingTarget = null;
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      const wrap = document.getElementById('canvas-wrap');
+      const dpr = window.devicePixelRatio || 1;
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
+      oPos = { x: Math.floor(w * 0.40), y: Math.floor(h * 0.65) };
+      if (!isDocked) {
+        f1Pos = { x: Math.floor(w * 0.2), y: Math.floor(h * 0.32) };
+        f2Pos = { x: Math.floor(w * 0.7), y: Math.floor(h * 0.78) };
+      }
+      draw();
+    }
+    window.addEventListener('resize', resize);
+
+    function drawArrowLine(ctx, fromX, fromY, toX, toY, color, width) {
+      const headLength = 14;
+      const dx = toX - fromX;
+      const dy = toY - fromY;
+      const angle = Math.atan2(dy, dx);
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI / 6), toY - headLength * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI / 6), toY - headLength * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      return angle;
+    }
+
+    function drawCanvasVectorSymbol(ctx, letter, subscript, x, y, color, fontSize = 18) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      ctx.font = 'italic bold ' + fontSize + 'px "Times New Roman", Times, Georgia, serif';
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'left';
+      ctx.fillText(letter, x, y);
+
+      const metrics = ctx.measureText(letter);
+      const letterWidth = metrics.width;
+      const arrowY = y - fontSize + 3;
+      const arrowStartX = x - 1;
+      const arrowEndX = x + letterWidth + 1;
+
+      ctx.lineWidth = 1.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(arrowStartX, arrowY);
+      ctx.lineTo(arrowEndX, arrowY);
+      ctx.stroke();
+
+      const headSize = 3.6;
+      ctx.beginPath();
+      ctx.moveTo(arrowEndX, arrowY);
+      ctx.lineTo(arrowEndX - headSize, arrowY - 2.8);
+      ctx.moveTo(arrowEndX, arrowY);
+      ctx.lineTo(arrowEndX - headSize, arrowY + 2.8);
+      ctx.stroke();
+
+      if (subscript) {
+        ctx.font = 'bold ' + Math.round(fontSize * 0.72) + 'px "Times New Roman", Times, Georgia, serif';
+        ctx.fillText(subscript, x + letterWidth + 1, y + 4);
+      }
+      ctx.restore();
+    }
+
+    function draw() {
+      const wrap = document.getElementById('canvas-wrap');
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 28) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y < h; y += 28) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      ctx.restore();
+
+      // Origin point O
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(oPos.x, oPos.y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = isDocked ? '#10b981' : '#f59e0b';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(oPos.x, oPos.y, 14, 0, Math.PI * 2);
+      ctx.strokeStyle = isDocked ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Label "Điểm O" at bottom-left to avoid ANY vector collision
+      ctx.font = 'bold 13px system-ui, sans-serif';
+      ctx.fillStyle = isDocked ? '#34d399' : '#fbbf24';
+      ctx.textAlign = 'right';
+      ctx.fillText('Điểm O', oPos.x - 18, oPos.y + 22);
+      ctx.restore();
+
+      const scale = w < 480 ? 4.4 : 5.4;
+      const rad1 = 0;
+      const rad2 = -(alpha * Math.PI / 180);
+
+      const p1_start = isDocked ? oPos : f1Pos;
+      const p2_start = isDocked ? oPos : f2Pos;
+
+      const p1_end = {
+        x: p1_start.x + f1 * scale * Math.cos(rad1),
+        y: p1_start.y + f1 * scale * Math.sin(rad1)
+      };
+      const p2_end = {
+        x: p2_start.x + f2 * scale * Math.cos(rad2),
+        y: p2_start.y + f2 * scale * Math.sin(rad2)
+      };
+
+      if (isDocked) {
+        const p_res = {
+          x: oPos.x + (f1 * scale * Math.cos(rad1) + f2 * scale * Math.cos(rad2)),
+          y: oPos.y + (f1 * scale * Math.sin(rad1) + f2 * scale * Math.sin(rad2))
+        };
+
+        // Dashed lines
+        ctx.save();
+        ctx.setLineDash([6, 5]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.beginPath(); ctx.moveTo(p2_end.x, p2_end.y); ctx.lineTo(p_res.x, p_res.y); ctx.stroke();
+        ctx.strokeStyle = '#10b981';
+        ctx.beginPath(); ctx.moveTo(p1_end.x, p1_end.y); ctx.lineTo(p_res.x, p_res.y); ctx.stroke();
+        ctx.restore();
+
+        // Angle Arc
+        if (alpha > 0) {
+          ctx.save();
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(oPos.x, oPos.y, 48, rad2, 0, false);
+          ctx.stroke();
+          ctx.font = 'bold 13px system-ui, sans-serif';
+          ctx.fillStyle = '#f59e0b';
+          ctx.textAlign = 'center';
+          const midA = rad2 / 2;
+          ctx.fillText('α = ' + alpha + '°', oPos.x + 68 * Math.cos(midA), oPos.y + 68 * Math.sin(midA) + 4);
+          ctx.restore();
+        }
+
+        // Resultant vector F (line + symbol near tip)
+        const resAngle = drawArrowLine(ctx, oPos.x, oPos.y, p_res.x, p_res.y, '#f43f5e', 4.8);
+        drawCanvasVectorSymbol(ctx, 'F', '', p_res.x + 16 * Math.cos(resAngle), p_res.y + 16 * Math.sin(resAngle) - 4, '#f43f5e', 20);
+
+        const radA = alpha * Math.PI / 180;
+        const fRes = Math.sqrt(f1*f1 + f2*f2 + 2*f1*f2*Math.cos(radA));
+        document.getElementById('txt-f-res').innerText = fRes.toFixed(1) + ' N';
+      }
+
+      // Draw F1 & F2 (lines + symbols near tips)
+      drawArrowLine(ctx, p1_start.x, p1_start.y, p1_end.x, p1_end.y, '#3b82f6', 3.6);
+      drawCanvasVectorSymbol(ctx, 'F', '1', p1_end.x + 14, p1_end.y + 6, '#38bdf8', 19);
+
+      const f2Angle = drawArrowLine(ctx, p2_start.x, p2_start.y, p2_end.x, p2_end.y, '#10b981', 3.6);
+      drawCanvasVectorSymbol(ctx, 'F', '2', p2_end.x + 16 * Math.cos(f2Angle) - 6, p2_end.y + 16 * Math.sin(f2Angle) - 8, '#34d399', 19);
+
+      // Origin handles if not docked
+      if (!isDocked) {
+        [
+          { p: p1_start, color: '#3b82f6', label: 'Gốc F₁ (Kéo đến O)' },
+          { p: p2_start, color: '#10b981', label: 'Gốc F₂ (Kéo đến O)' }
+        ].forEach((item) => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(item.p.x, item.p.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = item.color;
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+          ctx.font = 'bold 11px system-ui, sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.fillText(item.label, item.p.x, item.p.y - 14);
+          ctx.restore();
+        });
+      }
+
+      // Draggable Tip nodes
+      [
+        { p: p1_end, color: '#3b82f6' },
+        { p: p2_end, color: '#10b981' }
+      ].forEach((item) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(item.p.x, item.p.y, 7.5, 0, Math.PI * 2);
+        ctx.fillStyle = item.color;
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    function autoDock() {
+      isDocked = true;
+      document.getElementById('dock-status').className = 'dock-success';
+      document.getElementById('dock-status').innerHTML = '✅ Hai lực đã đồng quy tại điểm O (Quy tắc hình bình hành)';
+      draw();
+    }
+
+    function separate() {
+      isDocked = false;
+      isPlaying = false;
+      const wrap = document.getElementById('canvas-wrap');
+      f1Pos = { x: Math.floor(wrap.clientWidth * 0.2), y: Math.floor(wrap.clientHeight * 0.32) };
+      f2Pos = { x: Math.floor(wrap.clientWidth * 0.7), y: Math.floor(wrap.clientHeight * 0.78) };
+      document.getElementById('dock-status').className = 'dock-alert';
+      document.getElementById('dock-status').innerHTML = '⚠️ Kéo 2 gốc vector về điểm O hoặc bấm "Tịnh tiến về O" để đồng quy';
+      draw();
+    }
+
+    function resetSim() {
+      f1 = 20;
+      f2 = 25;
+      alpha = 60;
+      isPlaying = false;
+      document.getElementById('slider-f1').value = f1;
+      document.getElementById('slider-f2').value = f2;
+      document.getElementById('slider-alpha').value = alpha;
+      document.getElementById('val-f1').innerText = f1 + ' N';
+      document.getElementById('val-f2').innerText = f2 + ' N';
+      document.getElementById('val-alpha').innerText = alpha + '°';
+      document.getElementById('txt-f1').innerText = f1.toFixed(1) + ' N';
+      document.getElementById('txt-f2').innerText = f2.toFixed(1) + ' N';
+      document.getElementById('txt-alpha').innerText = alpha.toFixed(1) + '°';
+      document.getElementById('btn-play').innerText = '▶️ Quét góc tự động (Play)';
+      document.getElementById('btn-play').className = 'btn btn-emerald';
+      autoDock();
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      if (isPlaying) autoDock();
+      const btn = document.getElementById('btn-play');
+      btn.innerText = isPlaying ? '⏸️ Tạm dừng' : '▶️ Quét góc tự động (Play)';
+      btn.className = isPlaying ? 'btn btn-amber' : 'btn btn-emerald';
+      lastTime = performance.now();
+    }
+
+    function toggleSlow() {
+      isSlow = !isSlow;
+      const btn = document.getElementById('btn-slow');
+      btn.className = 'btn ' + (isSlow ? 'btn-amber' : '');
+      btn.innerText = isSlow ? '🐢 Đang tua chậm (0.5x)' : '🐢 Tua chậm (0.5x)';
+    }
+
+    function updateF1(v) {
+      f1 = parseFloat(v);
+      document.getElementById('val-f1').innerText = f1 + ' N';
+      document.getElementById('txt-f1').innerText = f1.toFixed(1) + ' N';
+      draw();
+    }
+    function updateF2(v) {
+      f2 = parseFloat(v);
+      document.getElementById('val-f2').innerText = f2 + ' N';
+      document.getElementById('txt-f2').innerText = f2.toFixed(1) + ' N';
+      draw();
+    }
+    function updateAlpha(v) {
+      alpha = parseFloat(v);
+      document.getElementById('val-alpha').innerText = alpha + '°';
+      document.getElementById('txt-alpha').innerText = alpha.toFixed(1) + '°';
+      draw();
+    }
+    function setAngle(deg) {
+      alpha = deg;
+      document.getElementById('slider-alpha').value = deg;
+      updateAlpha(deg);
+      autoDock();
+    }
+
+    // Animation Loop
+    function animate(now) {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+
+      if (isPlaying) {
+        const speed = isSlow ? 18 : 36;
+        alpha += sweepDir * speed * dt;
+        if (alpha >= 180) { alpha = 180; sweepDir = -1; }
+        else if (alpha <= 0) { alpha = 0; sweepDir = 1; }
+        alpha = Math.round(alpha);
+        document.getElementById('slider-alpha').value = alpha;
+        document.getElementById('val-alpha').innerText = alpha + '°';
+        document.getElementById('txt-alpha').innerText = alpha.toFixed(1) + '°';
+        draw();
+      }
+      requestAnimationFrame(animate);
+    }
+
+    // Pointer Dragging
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.touches ? e.touches[0].clientX : e.clientX;
+      const cy = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: cx - rect.left, y: cy - rect.top };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const pos = getPointerPos(e);
+      const wrap = document.getElementById('canvas-wrap');
+      const scale = wrap.clientWidth < 480 ? 4.4 : 5.4;
+      const s1 = isDocked ? oPos : f1Pos;
+      const s2 = isDocked ? oPos : f2Pos;
+      const rad2 = -(alpha * Math.PI / 180);
+
+      const e1 = { x: s1.x + f1 * scale, y: s1.y };
+      const e2 = { x: s2.x + f2 * scale * Math.cos(rad2), y: s2.y + f2 * scale * Math.sin(rad2) };
+
+      if (Math.hypot(pos.x - e2.x, pos.y - e2.y) < 24) { draggingTarget = 'f2_tip'; return; }
+      if (Math.hypot(pos.x - e1.x, pos.y - e1.y) < 24) { draggingTarget = 'f1_tip'; return; }
+      if (!isDocked) {
+        if (Math.hypot(pos.x - f1Pos.x, pos.y - f1Pos.y) < 28) { draggingTarget = 'f1_orig'; return; }
+        if (Math.hypot(pos.x - f2Pos.x, pos.y - f2Pos.y) < 28) { draggingTarget = 'f2_orig'; return; }
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!draggingTarget) return;
+      const pos = getPointerPos(e);
+      const wrap = document.getElementById('canvas-wrap');
+      const scale = wrap.clientWidth < 480 ? 4.4 : 5.4;
+
+      if (draggingTarget === 'f1_orig') {
+        f1Pos = pos;
+        if (Math.hypot(f1Pos.x - oPos.x, f1Pos.y - oPos.y) < 36 && Math.hypot(f2Pos.x - oPos.x, f2Pos.y - oPos.y) < 36) autoDock();
+      } else if (draggingTarget === 'f2_orig') {
+        f2Pos = pos;
+        if (Math.hypot(f1Pos.x - oPos.x, f1Pos.y - oPos.y) < 36 && Math.hypot(f2Pos.x - oPos.x, f2Pos.y - oPos.y) < 36) autoDock();
+      } else if (draggingTarget === 'f1_tip') {
+        const sx = isDocked ? oPos.x : f1Pos.x;
+        const dist = Math.max(5 * scale, Math.min(50 * scale, pos.x - sx));
+        f1 = Math.round(dist / scale);
+        updateF1(f1);
+        document.getElementById('slider-f1').value = f1;
+      } else if (draggingTarget === 'f2_tip') {
+        const s = isDocked ? oPos : f2Pos;
+        const dx = pos.x - s.x;
+        const dy = pos.y - s.y;
+        f2 = Math.round(Math.max(5, Math.min(50, Math.hypot(dx, dy) / scale)));
+        updateF2(f2);
+        document.getElementById('slider-f2').value = f2;
+
+        let aRad = Math.atan2(-dy, dx);
+        if (aRad < 0) aRad = 0; if (aRad > Math.PI) aRad = Math.PI;
+        alpha = Math.round((aRad * 180) / Math.PI);
+        updateAlpha(alpha);
+        document.getElementById('slider-alpha').value = alpha;
+      }
+      draw();
+    });
+
+    window.addEventListener('pointerup', () => {
+      if (draggingTarget === 'f1_orig' || draggingTarget === 'f2_orig') {
+        if (Math.hypot(f1Pos.x - oPos.x, f1Pos.y - oPos.y) < 38) f1Pos = { ...oPos };
+        if (Math.hypot(f2Pos.x - oPos.x, f2Pos.y - oPos.y) < 38) f2Pos = { ...oPos };
+        if (f1Pos.x === oPos.x && f1Pos.y === oPos.y && f2Pos.x === oPos.x && f2Pos.y === oPos.y) autoDock();
+      }
+      draggingTarget = null;
+      draw();
+    });
+
+    // Quiz Section with Instant Feedback & LaTeX
+    function renderQuiz() {
+      const container = document.getElementById('quiz-list');
+      container.innerHTML = '';
+
+      QUIZ_DATA.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+
+        const qTitle = document.createElement('div');
+        qTitle.className = 'quiz-question';
+        qTitle.innerHTML = '<strong>Câu ' + (idx + 1) + ':</strong> ' + renderMathText(q.question);
+        card.appendChild(qTitle);
+
+        const optsDiv = document.createElement('div');
+        optsDiv.className = 'quiz-options';
+
+        q.options.forEach((opt, optIdx) => {
+          const optBtn = document.createElement('div');
+          optBtn.className = 'quiz-option';
+          optBtn.id = 'opt-' + q.id + '-' + optIdx;
+          optBtn.innerHTML = '<span>' + renderMathText(opt) + '</span>';
+          optBtn.onclick = () => selectQuizOption(q.id, optIdx);
+          optsDiv.appendChild(optBtn);
+        });
+
+        card.appendChild(optsDiv);
+
+        const expDiv = document.createElement('div');
+        expDiv.className = 'quiz-explanation';
+        expDiv.id = 'exp-' + q.id;
+        expDiv.style.display = 'none';
+        card.appendChild(expDiv);
+
+        container.appendChild(card);
+      });
+      updateQuizStatus();
+    }
+
+    function selectQuizOption(qId, optIdx) {
+      if (userAnswers[qId] !== undefined) return;
+      userAnswers[qId] = optIdx;
+
+      const q = QUIZ_DATA.find(item => item.id === qId);
+      const isCorrect = optIdx === q.correctAnswer;
+
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById('opt-' + qId + '-' + i);
+        if (i === q.correctAnswer) {
+          el.className = 'quiz-option correct';
+          el.innerHTML = '<span>' + renderMathText(q.options[i]) + '</span> <span style="font-weight:700; font-size:11px;">✓ ĐÁP ÁN ĐÚNG</span>';
+        } else if (i === optIdx && !isCorrect) {
+          el.className = 'quiz-option wrong';
+          el.innerHTML = '<span>' + renderMathText(q.options[i]) + '</span> <span style="font-weight:700; font-size:11px;">✗ BẠN ĐÃ CHỌN</span>';
+        }
+      }
+
+      const expEl = document.getElementById('exp-' + qId);
+      expEl.style.display = 'block';
+      expEl.innerHTML = '<strong>💡 Lời giải chi tiết:</strong> ' + renderMathText(q.explanation);
+
+      updateQuizStatus();
+    }
+
+    function updateQuizStatus() {
+      const answered = Object.keys(userAnswers).length;
+      let correct = 0;
+      QUIZ_DATA.forEach(q => {
+        if (userAnswers[q.id] === q.correctAnswer) correct++;
+      });
+      document.getElementById('quiz-status').innerText = 'Đúng ' + correct + ' / ' + answered + ' câu (Tổng 10 câu)';
+
+      if (scormApi && answered === 10) {
+        try {
+          const rawScore = correct * 10;
+          scormApi.LMSSetValue("cmi.core.score.raw", rawScore.toString());
+          scormApi.LMSSetValue("cmi.core.lesson_status", rawScore >= 50 ? "passed" : "failed");
+          scormApi.LMSCommit("");
+        } catch(e) {}
+      }
+    }
+
+    function resetQuiz() {
+      userAnswers = {};
+      renderQuiz();
+    }
+
+    function initStaticLaTeX() {
+      // HUD LaTeX
+      document.getElementById('tex-f1').innerHTML = renderTex('\\vec{F}_1');
+      document.getElementById('tex-f2').innerHTML = renderTex('\\vec{F}_2');
+      document.getElementById('tex-alpha').innerHTML = renderTex('\\alpha');
+      document.getElementById('tex-f-res-label').innerHTML = renderTex('\\vec{F}');
+      document.getElementById('tex-formula-res').innerHTML = renderTex('F = \\sqrt{F_1^2 + F_2^2 + 2F_1F_2\\cos\\alpha}');
+
+      // Controls
+      document.getElementById('ctrl-lbl-f1').innerHTML = renderTex('F_1');
+      document.getElementById('ctrl-lbl-f2').innerHTML = renderTex('F_2');
+      document.getElementById('ctrl-lbl-alpha').innerHTML = renderTex('\\alpha');
+
+      // Knowledge box
+      document.getElementById('k-f1').innerHTML = renderTex('\\vec{F}_1');
+      document.getElementById('k-f2').innerHTML = renderTex('\\vec{F}_2');
+      document.getElementById('k-f').innerHTML = renderTex('\\vec{F}');
+      document.getElementById('k-vec-eq').innerHTML = renderTex('\\vec{F} = \\vec{F}_1 + \\vec{F}_2', true);
+
+      document.getElementById('k-mag-formula').innerHTML = renderTex('F = \\sqrt{F_1^2 + F_2^2 + 2F_1F_2\\cos\\alpha}', true);
+      document.getElementById('k-bound-formula').innerHTML = renderTex('|F_1 - F_2| \\le F \\le F_1 + F_2', true);
+
+      document.getElementById('k-c1-ang').innerHTML = renderTex('\\alpha = 0^\\circ');
+      document.getElementById('k-c1-res').innerHTML = renderTex('F_{\\max} = F_1 + F_2');
+
+      document.getElementById('k-c2-ang').innerHTML = renderTex('\\alpha = 180^\\circ');
+      document.getElementById('k-c2-res').innerHTML = renderTex('F_{\\min} = |F_1 - F_2|');
+
+      document.getElementById('k-c3-ang').innerHTML = renderTex('\\alpha = 90^\\circ');
+      document.getElementById('k-c3-res').innerHTML = renderTex('F = \\sqrt{F_1^2 + F_2^2}');
+
+      document.getElementById('k-c4-ang').innerHTML = renderTex('\\alpha = 120^\\circ');
+      document.getElementById('k-c4-res').innerHTML = renderTex('F = F_1 = F_2');
+    }
+
+    window.onload = () => {
+      initStaticLaTeX();
+      resize();
+      resetSim();
+      renderQuiz();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>
